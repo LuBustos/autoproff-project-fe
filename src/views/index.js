@@ -1,18 +1,28 @@
 import DeleteIcon from "@mui/icons-material/DeleteOutlined";
 import EditIcon from "@mui/icons-material/Edit";
-import { Divider } from "@mui/material";
+import { Divider, Typography } from "@mui/material";
 import { GridActionsCellItem } from "@mui/x-data-grid";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AlertUI } from "../components";
+import Filters from "../components/filter";
 import GridUI from "../components/grid";
 import CreateOrUpdateModal from "../components/modal/create";
 import RemoveModal from "../components/modal/remove";
 import local_employees from "../constants/employees.json";
 import { workshops } from "../constants/workshops";
-import { useAlert, useOpenEditModal, useOpenRemoveModal } from "../hooks";
-import { employeeFiltered, getEmployees, setEmployeeInStorage } from "../utils";
+import {
+  useAlert,
+  useEventListener,
+  useOpenEditModal,
+  useOpenRemoveModal,
+} from "../hooks";
+import {
+  clearEmployee,
+  employeeFiltered,
+  getEmployees,
+  setEmployeeInStorage,
+} from "../utils";
 import styles from "./styles.module.css";
-import Filters from "../components/filter";
 
 const Title = ({ children }) => {
   return (
@@ -40,8 +50,10 @@ const MainPage = () => {
     useOpenEditModal();
   const { handlerCloseRemoveModal, handlerOpenRemoveModal, openRemoveModal } =
     useOpenRemoveModal();
+  const keyPressed = useEventListener();
+  const btnRef = useRef();
 
-  useEffect(() => {
+  const getAndSaveEmployees = () => {
     let dataToSave = local_employees;
     const employees = getEmployees();
     if (employees) {
@@ -49,21 +61,57 @@ const MainPage = () => {
     }
     setEmployeeInStorage(dataToSave);
     setEmployees(dataToSave);
+  };
+
+  useEffect(() => {
+    getAndSaveEmployees();
   }, []);
 
   useEffect(() => {
     if (loading) {
       const data = getEmployees();
       setEmployees(data);
+      clearFilters();
     }
   }, [loading]);
 
   useEffect(() => {
     if (filters) {
-        const data = employeeFiltered(filters);
-        setEmployees(data);
+      const data = employeeFiltered(filters);
+      setEmployees(data);
+    }
+  }, [filters]);
+
+  useEffect(() => {
+    if (
+      keyPressed?.ctrlKey &&
+      (keyPressed?.code === "g" || keyPressed?.code === "KeyG")
+    ) {
+      if (btnRef.current != null) {
+        setFocus();
+        keyPressed.preventDefault();
       }
-  },[filters])
+    }
+
+    if (
+      keyPressed?.ctrlKey &&
+      (keyPressed?.code === "f" || keyPressed?.code === "KeyF")
+    ) {
+      if (btnRef.current != null) {
+        loseFocus();
+        keyPressed.preventDefault();
+      }
+    }
+
+    if (
+      keyPressed?.ctrlKey &&
+      (keyPressed?.code === "r" || keyPressed?.code === "KeyR")
+    ) {
+      clearEmployee();
+      getAndSaveEmployees();
+      keyPressed.preventDefault();
+    }
+  }, [keyPressed]);
 
   const handlerFilters = (name, value) => {
     setFilters({
@@ -72,17 +120,34 @@ const MainPage = () => {
     });
   };
 
+  const setFocus = () => {
+    btnRef.current.focus();
+  };
+
+  const loseFocus = () => {
+    btnRef.current.blur();
+  };
+
+  const clearFilters = () => {
+    setFilters(initial_filter);
+  };
+
   const columns = [
     { field: "employee_id", headerName: "ID", width: 90 },
     {
       field: "name",
       headerName: "Name",
-      width: 150,
+      width: 350,
+    },
+    {
+      field: "job_name",
+      headerName: "Role",
+      width: 530,
     },
     {
       field: "workshop",
       headerName: "Workshop",
-      width: 150,
+      width: 350,
       valueGetter: getWorkshop,
     },
     {
@@ -99,6 +164,7 @@ const MainPage = () => {
             className="textPrimary"
             onClick={() => handlerOpenEditModal(id)}
             color="inherit"
+            ref={id === employees[0].employee_id ? btnRef : null}
           />,
           <GridActionsCellItem
             icon={<DeleteIcon color="error" />}
@@ -119,14 +185,18 @@ const MainPage = () => {
   };
 
   return (
-    <div style={{ height: 700, width: "100%" }}>
+    <div style={{ height: 400, width: "100%" }}>
       <Title>Employees</Title>
-      <div>
+      <div style={{ margin: 10 }}>
         <h3>Filters</h3>
-        <Filters filters={filters} handlerFilters={handlerFilters}/>
+        <Filters
+          filters={filters}
+          handlerFilters={handlerFilters}
+          keyPressed={keyPressed}
+        />
       </div>
       <div style={{ display: "flex", height: "100%" }}>
-        <div style={{ flexGrow: 1 }}>
+        <div style={{ flexGrow: 1, padding: 10 }}>
           <GridUI
             columns={columns}
             data={employees}
@@ -134,8 +204,10 @@ const MainPage = () => {
             getRowId={(row) => row.employee_id}
             showAlert={showAlert}
             process={process}
+            keyPressed={keyPressed}
           />
         </div>
+
         {openEditModal.open ? (
           <CreateOrUpdateModal
             open={openEditModal.open}
@@ -157,6 +229,17 @@ const MainPage = () => {
             process={process}
           />
         ) : null}
+      </div>
+      <div style={{padding:10}}>
+        <Typography variant="subtitle2" gutterBottom>
+          Shortcuts
+        </Typography>
+        <Typography variant="body2" gutterBottom>
+          Ctrl + G - Focus on grid
+        </Typography>
+        <Typography variant="body2" gutterBottom>
+          Ctrl + R - Refresh & load info from file
+        </Typography>
       </div>
       {openAlert.open ? (
         <AlertUI

@@ -2,3 +2,28 @@
     text-align: center;
     margin: 20px;
 }
+
+.helperText {
+    margin-left: 20px !important;
+    margin-top: 0px !important;
+    line-height: 0.3 !important;
+    margin-bottom: 10px !important;
+}
+
+.toolbar {
+    display: contents !important;
+}
+
+.button {
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+.download {
+    float: right;
+}
+
+.container {
+    display: flex;
+    justify-content: space-between;
+}

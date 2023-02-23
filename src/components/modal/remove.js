@@ -5,8 +5,19 @@ import DialogContent from "@mui/material/DialogContent";
 import DialogContentText from "@mui/material/DialogContentText";
 import DialogTitle from "@mui/material/DialogTitle";
 import { removeEmployeeById } from "../../utils";
+import { useEventListener } from "../../hooks";
+import { useEffect } from "react";
 
-const Remove = ({ open, handleClose, row_name, id, showAlert,process }) => {
+const Remove = ({ open, handleClose, row_name, id, showAlert, process }) => {
+  const keyPressed = useEventListener();
+
+  useEffect(() => {
+    if (keyPressed?.code === "Enter") {
+      removeEmployee();
+    }
+    //eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [keyPressed]);
+
   const removeEmployee = async () => {
     try {
       removeEmployeeById(id);

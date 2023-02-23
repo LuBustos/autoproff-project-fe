@@ -1,10 +1,4 @@
-import {
-  Divider,
-  FormControl,
-  InputLabel,
-  MenuItem,
-  Select,
-} from "@mui/material";
+import { Divider, FormControl, MenuItem } from "@mui/material";
 import Button from "@mui/material/Button";
 import Dialog from "@mui/material/Dialog";
 import DialogActions from "@mui/material/DialogActions";
@@ -12,17 +6,13 @@ import DialogContent from "@mui/material/DialogContent";
 import DialogTitle from "@mui/material/DialogTitle";
 import TextField from "@mui/material/TextField";
 import React, { useEffect } from "react";
-import { useFields } from "../../hooks";
 import { workshops } from "../../constants/workshops";
-import {
-  getEmployeeById,
-  saveEmployee,
-  setEmployeeInStorage,
-  updateEmployee,
-} from "../../utils";
+import { useEventListener, useFields } from "../../hooks";
+import { getEmployeeById, saveEmployee, updateEmployee } from "../../utils";
 
 const initial_form = {
   name: "",
+  job_name: "",
   workshop: "",
 };
 
@@ -36,17 +26,26 @@ const Create = ({
   process,
 }) => {
   const { fields, handlerFields, saveAllFields } = useFields(initial_form);
-
-  const getEmployee = (id) => {
-    const employee = getEmployeeById(id);
-    saveAllFields(employee);
-  };
+  const keyPressed = useEventListener();
 
   useEffect(() => {
     if (update) {
       getEmployee(id);
     }
+    //eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    if (keyPressed?.code === "Enter") {
+      submit();
+    }
+    //eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [keyPressed]);
+
+  const getEmployee = (id) => {
+    const employee = getEmployeeById(id);
+    saveAllFields(employee);
+  };
 
   //Save info.
   const submit = async () => {
@@ -55,6 +54,12 @@ const Create = ({
         showAlert("The name should have a max of 25 characters", "error");
         return;
       }
+
+      if (fields.workshop.length === 0) {
+        showAlert("You should select a workshop", "error");
+        return;
+      }
+
       if (update) {
         updateEmployee(id, fields);
         showAlert("The employee was updated", "success");
@@ -93,6 +98,18 @@ const Create = ({
               value={fields.name}
               helperText="The employee name should have a max of 25 characters"
               error={fields.name.length > 25 ? true : false}
+              autoFocus
+            />
+            <TextField
+              margin="dense"
+              id="job_name"
+              label="Role"
+              fullWidth
+              variant="outlined"
+              onChange={(event) =>
+                handlerFields("job_name", event.currentTarget.value)
+              }
+              value={fields.job_name}
             />
             <TextField
               select

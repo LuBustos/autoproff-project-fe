@@ -1,7 +1,9 @@
 import AddIcon from "@mui/icons-material/Add";
+import SimCardDownloadIcon from "@mui/icons-material/SimCardDownload";
 import {
   Box,
   Button,
+  FormHelperText,
   LinearProgress,
   Pagination,
   PaginationItem,
@@ -16,8 +18,9 @@ import {
   useGridApiContext,
   useGridSelector,
 } from "@mui/x-data-grid";
-import React from "react";
+import React, { useEffect } from "react";
 import { useOpenCreateModal } from "../../hooks";
+import { createEmployeeFile } from "../../utils";
 import CreateOrUpdateModal from "../modal/create";
 import styles from "./styles.module.css";
 
@@ -125,17 +128,62 @@ function EditToolbar(props) {
   const { openModal } = props;
 
   return (
-    <GridToolbarContainer>
-      <Button color="primary" onClick={openModal} startIcon={<AddIcon />}>
-        Add Employee
-      </Button>
+    <GridToolbarContainer className={styles.toolbar}>
+      <div className={styles.container}>
+        <div>
+          <Button color="primary" onClick={openModal} startIcon={<AddIcon />}>
+            Add Employee
+          </Button>
+          <FormHelperText className={styles.helperText}>
+            You can press ctrl + A and start to create an employee
+          </FormHelperText>
+        </div>
+        <div className={styles.button}>
+          <Button
+            className={styles.download}
+            color="primary"
+            onClick={createEmployeeFile}
+            startIcon={<SimCardDownloadIcon />}
+          >
+            Download employee file
+          </Button>
+          <FormHelperText className={styles.helperText}>
+            You can press Ctrl + D - Download employee file
+          </FormHelperText>
+        </div>
+      </div>
     </GridToolbarContainer>
   );
 }
 
-const GridUI = ({ data, columns, loading, getRowId, showAlert,process }) => {
+const GridUI = ({
+  data,
+  columns,
+  loading,
+  getRowId,
+  showAlert,
+  process,
+  keyPressed,
+}) => {
   const { openCreateModal, handlerCloseCreateModal, handlerOpenCreateModal } =
     useOpenCreateModal();
+
+  useEffect(() => {
+    if (
+      keyPressed?.ctrlKey &&
+      (keyPressed?.code === "a" || keyPressed?.code === "KeyA")
+    ) {
+      handlerOpenCreateModal();
+    }
+
+    if (
+      keyPressed?.ctrlKey &&
+      (keyPressed?.code === "d" || keyPressed?.code === "KeyD")
+    ) {
+      createEmployeeFile();
+    }
+    //eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [keyPressed]);
 
   return (
     <Box className={styles.container}>
