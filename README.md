@@ -19,6 +19,12 @@ Ctrl + G - Focus on grid, with the arrows you can move between cells and with en
 
 Ctrl + R - Refresh & load info from employee file
 
+### In the modal:
+
+  Enter - Save and close the modal
+
+  Esc - Close the modal without save
+
 ## Setup
 Before running the project, there is an employee.json file with data by default. If you want to use your own data, you should replace the content in this file.
 
